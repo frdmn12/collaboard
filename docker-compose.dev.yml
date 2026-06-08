@@ -1,0 +1,29 @@
+services:
+  server:
+    build:
+      context: ./backend-collaboard
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend-collaboard:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+
+  client:
+    build:
+      context: ./frontend-collaboard
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend-collaboard:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000
