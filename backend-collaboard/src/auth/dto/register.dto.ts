@@ -1,13 +1,29 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  Validate,
+} from 'class-validator';
 
-export class RegisterDto {
+export class RegisterAuthDto {
   @IsString()
-  name: string;
+  name!: string;
 
+  @IsNotEmpty()
+  @IsString()
   @IsEmail()
-  email: string;
+  email!: string;
 
+  @IsNotEmpty()
   @IsString()
-  @MinLength(8)
-  password: string;
+  @MinLength(6)
+  password!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @Validate((o: RegisterAuthDto) => o.password === o.confirmPassword, {
+    message: 'Passwords do not match',
+  })
+  confirmPassword!: string;
 }

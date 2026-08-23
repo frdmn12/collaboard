@@ -1,150 +1,64 @@
-import {
-  HttpException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { RegisterResponseDto } from './dto/auth-response.dto';
+import { User } from './../users/user.entity';
+import { Injectable } from '@nestjs/common';
+import { RegisterAuthDto } from './dto/register.dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../users/user.entity';
-import { UsersService } from '../users/users.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 
-interface Tokens {
-  accessToken: string;
-  refreshToken: string;
-}
+const SALT_ROUNDS = process.env.SALT_ROUNDS
+  ? parseInt(process.env.SALT_ROUNDS)
+  : 7;
+
+const REFRESH_TOKEN_TTL_DAYS = process.env.REFRESH_TOKEN_TTL_DAYS
+  ? parseInt(process.env.REFRESH_TOKEN_TTL_DAYS)
+  : 7;
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {}
 
-  private async getTokens(userId: string, email: string): Promise<Tokens> {
-    const payload = { sub: userId, email };
+  async register(dto: RegisterAuthDto): Promise<RegisterResponseDto> {
+    // check does emil already exist
+    const checkEmail = await this.userRepo.findOne({
+      where: { email: dto.email },
+    });
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-        expiresIn: (this.configService.get<string>('JWT_ACCESS_EXPIRES_IN') ??
-          '15m') as JwtSignOptions['expiresIn'],
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ??
-          '7d') as JwtSignOptions['expiresIn'],
-      }),
-    ]);
+    if (checkEmail) {
+      throw new Error('Email already exists');
+    }
 
-    return { accessToken, refreshToken };
+    const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
+
+    const user = this.userRepo.create({
+      name: dto.name,
+      email: dto.email,
+      passwordHash,
+    });
+    await this.userRepo.save(user);
+
+    return {
+      id: user.id,
+      email: user.email,
+    };
   }
 
-  async register(dto: RegisterDto) {
-    try {
-      const user = await this.usersService.create(dto.name, dto.email, dto.password);
-      return { id: user.id, name: user.name, email: user.email };
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to register user');
-    }
+  findAll() {
+    return `This action returns all auth`;
   }
 
-  async validateUser(email: string, password: string): Promise<User> {
-    try {
-      const user = await this.usersService.findByEmail(email);
-      if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      const matches = await bcrypt.compare(password, user.passwordHash);
-      if (!matches) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      return user;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to validate user');
-    }
+  findOne(id: number) {
+    return `This action returns a #${id} auth`;
   }
 
-  async login(dto: LoginDto) {
-    try {
-      const user = await this.validateUser(dto.email, dto.password);
-      const tokens = await this.getTokens(user.id, user.email);
-      await this.usersService.setRefreshTokenHash(user.id, tokens.refreshToken);
+  // update(id: number, updateAuthDto: UpdateAuthDto) {
+  //   return `This action updates a #${id} auth`;
+  // }
 
-      return {
-        ...tokens,
-        user: { id: user.id, name: user.name, email: user.email },
-      };
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to login');
-    }
-  }
-
-  async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
-    try {
-      const user = await this.usersService.getUserIfRefreshTokenMatches(
-        userId,
-        refreshToken,
-      );
-      if (!user) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      const tokens = await this.getTokens(user.id, user.email);
-      await this.usersService.setRefreshTokenHash(user.id, tokens.refreshToken);
-      return tokens;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to refresh tokens');
-    }
-  }
-
-  async logout(userId: string): Promise<void> {
-    try {
-      await this.usersService.setRefreshTokenHash(userId, null);
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to logout');
-    }
-  }
-
-  async getProfile(userId: string) {
-    try {
-      const user = await this.usersService.findById(userId);
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-      };
-    } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to fetch profile');
-    }
+  remove(id: number) {
+    return `This action removes a #${id} auth`;
   }
 }
