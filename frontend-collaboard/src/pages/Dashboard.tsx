@@ -8,14 +8,14 @@ import StatCards from '@/components/dashboard/StatCards'
 import BoardToolbar from '@/components/dashboard/BoardToolbar'
 import Board from '@/components/dashboard/Board'
 import TeamLoad from '@/components/dashboard/TeamLoad'
-import ActivityList from '@/components/dashboard/ActivityList'
+import RequireBoard from '@/components/layout/RequireBoard'
 import type { View } from '@/components/dashboard/ViewToggle'
 
 export default function Dashboard() {
   const root = useRef<HTMLDivElement>(null)
   const [adding, setAdding] = useState<Status | null>(null)
   const [view, setView] = useState<View>('grid')
-  const { tasks, visible, count, percent, load, advance, add, query, setQuery, who, setWho } = useTasks()
+  const { tasks, visible, count, percent, load, advance, addTask, query, setQuery, who, setWho } = useTasks()
   useDashboardMotion(root)
 
   const stats = [
@@ -27,13 +27,15 @@ export default function Dashboard() {
   return (
     <div ref={root} className="flex flex-col gap-8">
       <Topbar title="Dasbor" onNew={() => setAdding('todo')} />
-      <Greeting active={count('doing') + count('review')} />
-      <StatCards stats={stats} />
-      <section aria-label="Papan tugas" className="flex flex-col gap-4">
-        <BoardToolbar query={query} onQuery={setQuery} who={who} onWho={setWho} view={view} onView={setView} />
-        <Board tasks={visible} view={view} adding={adding} onAdding={setAdding} onAdd={add} onAdvance={advance} />
-      </section>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4"><TeamLoad load={load} /><ActivityList /></div>
+      <RequireBoard>
+        <Greeting active={count('doing') + count('review')} />
+        <StatCards stats={stats} />
+        <section aria-label="Papan tugas" className="flex flex-col gap-4">
+          <BoardToolbar query={query} onQuery={setQuery} who={who} onWho={setWho} view={view} onView={setView} />
+          <Board tasks={visible} view={view} adding={adding} onAdding={setAdding} onAdd={(t, s) => addTask(t, s)} onAdvance={advance} />
+        </section>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4"><TeamLoad load={load} /></div>
+      </RequireBoard>
     </div>
   )
 }

@@ -1,29 +1,32 @@
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  MaxLength,
   MinLength,
-  Validate,
 } from 'class-validator';
 
-export class RegisterAuthDto {
+const trim = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.trim() : value;
+const normalizeEmail = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.trim().toLowerCase() : value;
+
+export class RegisterDto {
+  @Transform(trim)
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
   name!: string;
 
-  @IsNotEmpty()
-  @IsString()
+  @Transform(normalizeEmail)
   @IsEmail()
+  @MaxLength(254)
   email!: string;
 
-  @IsNotEmpty()
+  /** Maks 72 karakter: batas input bcrypt. */
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
+  @MaxLength(72)
   password!: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @Validate((o: RegisterAuthDto) => o.password === o.confirmPassword, {
-    message: 'Passwords do not match',
-  })
-  confirmPassword!: string;
 }

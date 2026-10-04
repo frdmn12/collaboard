@@ -9,7 +9,7 @@ import KanbanCard from './KanbanCard'
 
 type Props = {
   status: (typeof statuses)[number]; tasks: Task[]; adding: boolean
-  onAdvance: (id: number) => void; onOpenAdd: () => void; onAdd: (title: string) => void; onCloseAdd: () => void
+  onAdvance: (id: string) => void; onOpenAdd: () => void; onAdd: (title: string) => void; onCloseAdd: () => void
 }
 
 /** Kolom = area lepas (useDroppable); kolom kosong tetap bisa menerima kartu. */

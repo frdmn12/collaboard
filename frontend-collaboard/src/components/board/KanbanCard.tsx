@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import type { Task } from '@/data/dashboard'
 import TaskCard from '@/components/dashboard/TaskCard'
 
-type Props = { task: Task; index: number; bar: string; onAdvance: (id: number) => void }
+type Props = { task: Task; index: number; bar: string; onAdvance: (id: string) => void }
 
 /** Kartu yang bisa diseret (useSortable); gagang di pojok kanan atas, juga bisa lewat keyboard. */
 export default function KanbanCard({ task, index, bar, onAdvance }: Props) {

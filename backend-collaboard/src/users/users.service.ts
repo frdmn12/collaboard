@@ -1,39 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { User } from './user.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @InjectRepository(User) private readonly users: Repository<User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+  private repo(manager?: EntityManager) {
+    return manager ? manager.getRepository(User) : this.users;
   }
 
-  findAll() {
-    return this.usersRepository.find();
+  create(
+    data: Pick<User, 'name' | 'email' | 'passwordHash'>,
+    manager?: EntityManager,
+  ) {
+    const repo = this.repo(manager);
+    return repo.save(repo.create(data));
+  }
+
+  findById(id: string) {
+    return this.users.findOne({ where: { id } });
   }
 
   findByEmail(email: string) {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.users.findOne({ where: { email } });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  /** Hanya untuk login: memuat passwordHash yang biasanya disembunyikan. */
+  findByEmailWithPassword(email: string) {
+    return this.users
+      .createQueryBuilder('u')
+      .addSelect('u.passwordHash')
+      .where('u.email = :email', { email })
+      .getOne();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async updatePassword(
+    id: string,
+    passwordHash: string,
+    manager?: EntityManager,
+  ) {
+    await this.repo(manager).update({ id }, { passwordHash });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async markEmailVerified(id: string, manager?: EntityManager) {
+    await this.repo(manager).update({ id }, { emailVerifiedAt: new Date() });
   }
 }

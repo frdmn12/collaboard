@@ -1,12 +1,7 @@
-export type Member = { name: string; role: string; email: string; tint: string }
+/** Anggota papan (dari API). `role` adalah peran di papan, bukan jabatan. */
+export type Member = { userId: string; name: string; email: string; role: 'admin' | 'member'; isOwner: boolean }
 
+export const boardRoleLabel: Record<Member['role'], string> = { admin: 'Admin', member: 'Anggota' }
+
+/** Daftar jabatan untuk pengaturan profil (disimpan lokal; belum ada API). */
 export const roles = ['Desainer', 'Manajer produk', 'Konten', 'Pengembang'] as const
-export const tints = ['var(--sleep-lilac)', 'var(--coral-signal)', 'var(--sky-top)', '#c8f0b8']
-
-// Contoh data; ganti dengan data API.
-export const initialMembers: Member[] = [
-  { name: 'Dewi', role: 'Desainer', email: 'dewi@studionusa.id', tint: tints[0] },
-  { name: 'Raka', role: 'Manajer produk', email: 'raka@studionusa.id', tint: tints[1] },
-  { name: 'Sari', role: 'Konten', email: 'sari@studionusa.id', tint: tints[2] },
-  { name: 'Bima', role: 'Pengembang', email: 'bima@studionusa.id', tint: tints[3] },
-]

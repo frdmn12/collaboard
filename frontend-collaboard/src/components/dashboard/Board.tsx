@@ -5,7 +5,7 @@ import type { View } from './ViewToggle'
 
 type Props = {
   tasks: Task[]; view: View; adding: Status | null
-  onAdding: (s: Status | null) => void; onAdd: (title: string, s: Status) => void; onAdvance: (id: number) => void
+  onAdding: (s: Status | null) => void; onAdd: (title: string, s: Status) => void; onAdvance: (id: string) => void
 }
 
 export default function Board({ tasks, view, adding, onAdding, onAdd, onAdvance }: Props) {

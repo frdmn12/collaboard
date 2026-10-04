@@ -1,6 +1,7 @@
-import { Bell, ChevronLeft, Plus } from 'lucide-react'
+import { ChevronLeft, Plus } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
+import NotificationBell from '@/components/notifications/NotificationBell'
 import ThemeToggle from '@/components/common/ThemeToggle'
 
 export default function Topbar({ title, onNew, newLabel = 'Tugas baru' }: { title: string; onNew?: () => void; newLabel?: string }) {
@@ -10,7 +11,7 @@ export default function Topbar({ title, onNew, newLabel = 'Tugas baru' }: { titl
         <Button asChild variant="ghost" size="icon-sm" aria-label="Kembali"><Link to="/"><ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" /></Link></Button>
         <span className="text-muted-foreground">Beranda</span><span className="text-muted-foreground">/</span><b className="font-medium">{title}</b>
       </nav>
-      <Button variant="secondary" size="icon" aria-label="Notifikasi"><Bell strokeWidth={1.75} aria-hidden="true" /></Button>
+      <NotificationBell />
       <ThemeToggle />
       {onNew && <Button onClick={onNew} className="ml-2"><Plus strokeWidth={1.75} aria-hidden="true" />{newLabel}</Button>}
     </div>

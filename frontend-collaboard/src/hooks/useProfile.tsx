@@ -1,24 +1,22 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 
 export type Profile = { name: string; email: string; role: string }
-const KEY = 'collaboard-profile'
-const fallback: Profile = { name: 'Dewi Lestari', email: 'dewi@studionusa.id', role: 'Desainer' }
+const KEY = 'collaboard-role'
+const loadRole = () => { try { return localStorage.getItem(KEY) ?? 'Desainer' } catch { return 'Desainer' } }
 
-const load = (): Profile => {
-  try { const raw = localStorage.getItem(KEY); if (raw) return { ...fallback, ...JSON.parse(raw) } } catch { /* abaikan */ }
-  return fallback
-}
+const Ctx = createContext<{ profile: Profile; saveRole: (role: string) => void } | null>(null)
 
-const Ctx = createContext<{ profile: Profile; save: (p: Profile) => void } | null>(null)
-
-/** Profil pengguna yang sedang masuk; disimpan di localStorage (ganti dengan API). */
+/** Profil pengguna: nama dan email dari akun yang masuk; peran masih disimpan lokal (belum ada API). */
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState(load)
-  const save = (p: Profile) => {
-    setProfile(p)
-    try { localStorage.setItem(KEY, JSON.stringify(p)) } catch { /* abaikan */ }
+  const { user } = useAuth()
+  const [role, setRole] = useState(loadRole)
+  const saveRole = (r: string) => {
+    setRole(r)
+    try { localStorage.setItem(KEY, r) } catch { /* abaikan */ }
   }
-  return <Ctx.Provider value={{ profile, save }}>{children}</Ctx.Provider>
+  const profile: Profile = { name: user?.name ?? '', email: user?.email ?? '', role }
+  return <Ctx.Provider value={{ profile, saveRole }}>{children}</Ctx.Provider>
 }
 
 export function useProfile() {

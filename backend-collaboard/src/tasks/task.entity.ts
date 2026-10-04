@@ -6,13 +6,15 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Board } from '../boards/board.entity';
 import { User } from '../users/user.entity';
 
-export enum TaskColumn {
+export enum TaskStatus {
   TODO = 'todo',
-  IN_PROGRESS = 'in_progress',
+  DOING = 'doing',
+  REVIEW = 'review',
   DONE = 'done',
 }
 
@@ -22,10 +24,8 @@ export enum TaskPriority {
   HIGH = 'high',
 }
 
-type BoardWithTasks = Board & { tasks?: Task[] };
-type UserWithAssignedTasks = User & { assignedTasks?: Task[] };
-
 @Entity('tasks')
+@Index(['boardId', 'status', 'order'])
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -33,19 +33,12 @@ export class Task {
   @Column({ name: 'board_id' })
   boardId!: string;
 
-  @ManyToOne(() => Board, (board: BoardWithTasks) => board.tasks ?? [], {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => Board, (board) => board.tasks, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'board_id' })
   board!: Board;
 
-  @Column({
-    name: 'column_name',
-    type: 'enum',
-    enum: TaskColumn,
-    default: TaskColumn.TODO,
-  })
-  columnName!: TaskColumn;
+  @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.TODO })
+  status!: TaskStatus;
 
   @Column()
   title!: string;
@@ -53,17 +46,20 @@ export class Task {
   @Column({ type: 'text', nullable: true })
   description!: string | null;
 
-  @Column({ name: 'assignee_id', nullable: true })
+  @Column({ type: 'text', array: true, default: () => "'{}'" })
+  tags!: string[];
+
+  /** Persentase penyelesaian 0-100. */
+  @Column({ type: 'int', default: 0 })
+  progress!: number;
+
+  @Column({ name: 'assignee_id', type: 'uuid', nullable: true })
   assigneeId!: string | null;
 
-  @ManyToOne(
-    () => User,
-    (user: UserWithAssignedTasks) => user.assignedTasks ?? [],
-    {
-      onDelete: 'SET NULL',
-      nullable: true,
-    },
-  )
+  @ManyToOne(() => User, (user) => user.assignedTasks, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
   @JoinColumn({ name: 'assignee_id' })
   assignee!: User | null;
 
@@ -73,7 +69,7 @@ export class Task {
   @Column({ name: 'due_date', type: 'timestamp', nullable: true })
   dueDate!: Date | null;
 
-  // Determines drag-and-drop position within a column.
+  /** Posisi dalam kolom (0 = paling atas); dipakai drag & drop. */
   @Column({ type: 'int' })
   order!: number;
 

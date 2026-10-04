@@ -63,9 +63,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         response !== null &&
         Array.isArray((response as Record<string, unknown>).message);
 
+      // Kode kesalahan domain (mis. EMAIL_NOT_VERIFIED) boleh dikirim lewat { code, message }.
+      const customCode =
+        typeof response === 'object' &&
+        response !== null &&
+        typeof (response as Record<string, unknown>).code === 'string'
+          ? ((response as Record<string, unknown>).code as string)
+          : null;
+
       return {
         status,
-        code: this.statusToCode(status),
+        code: customCode ?? this.statusToCode(status),
         message: isValidationError
           ? 'Validation failed'
           : this.extractMessage(response),

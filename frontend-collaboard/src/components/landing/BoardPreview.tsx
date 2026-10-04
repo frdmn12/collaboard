@@ -5,7 +5,7 @@ import PresenceCursors from './PresenceCursors'
 
 export default function BoardPreview() {
   return (
-    <div data-m="board" role="img" aria-label="Contoh papan Collaboard dengan tiga kolom: Doing, Review, Done" className="relative mt-12 w-full max-w-[960px] rounded-t-card bg-background px-6 pt-6 text-left shadow-lift">
+    <div data-m="board" role="img" aria-label="Contoh papan Collaboard dengan tiga kolom: Doing, Review, Done" className="force-light relative mt-12 w-full max-w-[960px] rounded-t-card bg-background px-6 pt-6 text-left text-foreground shadow-lift">
       <PresenceCursors />
       <div className="mb-4 flex flex-wrap items-center gap-4">
         <h3 className="text-2xl font-semibold tracking-[-0.01em]">Peluncuran aplikasi v2</h3>

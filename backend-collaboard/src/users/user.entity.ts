@@ -22,8 +22,13 @@ export class User {
   @Column({ unique: true })
   email!: string;
 
-  @Column()
+  /** Tidak ikut ter-select secara default agar hash tidak bocor lewat query biasa. */
+  @Column({ select: false })
   passwordHash!: string;
+
+  /** Terisi setelah pengguna memverifikasi email; login ditolak sebelum itu. */
+  @Column({ type: 'timestamp', nullable: true })
+  emailVerifiedAt!: Date | null;
 
   @CreateDateColumn()
   createdAt!: Date;

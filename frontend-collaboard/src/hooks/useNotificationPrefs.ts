@@ -1,24 +1,34 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { api } from '@/lib/api'
+import { errorMessage } from '@/lib/errors'
+import type { NotificationPrefs } from '@/data/notifications'
 
-const KEY = 'collaboard-notifications'
-export const notificationItems = [
-  { id: 'assigned', label: 'Tugas ditugaskan ke saya', hint: 'Email saat seseorang menugaskan tugas kepada Anda.' },
-  { id: 'review', label: 'Permintaan review', hint: 'Pemberitahuan saat ada yang meminta Anda meninjau.' },
-  { id: 'comment', label: 'Komentar baru', hint: 'Komentar di tugas yang Anda buat atau ikuti.' },
-  { id: 'digest', label: 'Ringkasan mingguan', hint: 'Rangkuman progres tim setiap Senin pagi.' },
-] as const
-type Prefs = Record<(typeof notificationItems)[number]['id'], boolean>
-const defaults: Prefs = { assigned: true, review: true, comment: false, digest: true }
+export const notificationItems: { id: keyof NotificationPrefs; label: string; hint: string }[] = [
+  { id: 'assigned', label: 'Tugas ditugaskan ke saya', hint: 'Notifikasi saat seseorang menugaskan tugas kepada Anda.' },
+  { id: 'review', label: 'Permintaan review', hint: 'Notifikasi saat tugas dipindahkan ke Review.' },
+  { id: 'comment', label: 'Komentar baru', hint: 'Notifikasi saat ada komentar di tugas Anda.' },
+  { id: 'boardAdded', label: 'Ditambahkan ke proyek', hint: 'Notifikasi saat Anda ditambahkan ke sebuah proyek.' },
+]
 
+/** Preferensi notifikasi dari server; perubahan optimistis dengan rollback bila gagal. */
 export function useNotificationPrefs() {
-  const [prefs, setPrefs] = useState<Prefs>(() => {
-    try { const raw = localStorage.getItem(KEY); if (raw) return { ...defaults, ...JSON.parse(raw) } } catch { /* abaikan */ }
-    return defaults
-  })
-  const set = (id: keyof Prefs, on: boolean) => setPrefs((p) => {
-    const next = { ...p, [id]: on }
-    try { localStorage.setItem(KEY, JSON.stringify(next)) } catch { /* abaikan */ }
-    return next
-  })
-  return [prefs, set] as const
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  const load = useCallback(() => {
+    setFailed(false)
+    api<NotificationPrefs>('/notifications/preferences').then(setPrefs).catch(() => setFailed(true))
+  }, [])
+  useEffect(load, [load])
+
+  const set = async (id: keyof NotificationPrefs, on: boolean) => {
+    setError(null)
+    setPrefs((p) => p && { ...p, [id]: on })
+    try { setPrefs(await api<NotificationPrefs>('/notifications/preferences', 'PATCH', { [id]: on })) } catch (err) {
+      setPrefs((p) => p && { ...p, [id]: !on })
+      setError(errorMessage(err))
+    }
+  }
+  return { prefs, error, failed, retry: load, set }
 }

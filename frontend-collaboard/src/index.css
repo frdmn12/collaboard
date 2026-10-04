@@ -2,8 +2,9 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
-/* Collaboard design tokens (light). Dark values below. */
-:root {
+/* Collaboard design tokens (light). Dark values below. `.force-light` memaksa token terang di dalam tema gelap (mis. pratinjau produk di atas latar laut). */
+:root,
+.force-light {
   --paper-white: #ffffff; --cloud-card: #ebf0f8; --ink: #222326; --charcoal: #1f2025; --body-gray: #747679;
   --sky-top: #d2e5ff; --sky-bottom: #fff9ee;
   --signal-gold: #ffca00; --coral-signal: #ffab94; --recovery-green: #31ce01; --metric-blue: #415eee; --sleep-lilac: #b9a6ff;

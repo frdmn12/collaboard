@@ -5,16 +5,19 @@ import Topbar from '@/components/dashboard/Topbar'
 import BoardToolbar from '@/components/dashboard/BoardToolbar'
 import BoardHeader from '@/components/board/BoardHeader'
 import KanbanBoard from '@/components/board/KanbanBoard'
+import RequireBoard from '@/components/layout/RequireBoard'
 
 export default function Papan() {
   const [adding, setAdding] = useState<Status | null>(null)
-  const { tasks, setTasks, visible, add, advance, reorder, query, setQuery, who, setWho } = useTasks()
+  const { tasks, visible, addTask, advance, reorder, commitMove, restore, query, setQuery, who, setWho } = useTasks()
   return (
     <div className="flex flex-col gap-6">
       <Topbar title="Papan" onNew={() => setAdding('todo')} />
-      <BoardHeader total={tasks.length} />
-      <BoardToolbar query={query} onQuery={setQuery} who={who} onWho={setWho} />
-      <KanbanBoard tasks={visible} allTasks={tasks} adding={adding} onAdding={setAdding} onReorder={reorder} onRestore={setTasks} onAdd={add} onAdvance={advance} />
+      <RequireBoard>
+        <BoardHeader />
+        <BoardToolbar query={query} onQuery={setQuery} who={who} onWho={setWho} />
+        <KanbanBoard tasks={visible} allTasks={tasks} adding={adding} onAdding={setAdding} onReorder={reorder} onRestore={restore} onCommit={commitMove} onAdd={(t, s) => addTask(t, s)} onAdvance={advance} />
+      </RequireBoard>
     </div>
   )
 }

@@ -7,7 +7,7 @@ import AddTaskForm from './AddTaskForm'
 
 type Props = {
   status: (typeof statuses)[number]; tasks: Task[]; adding: boolean
-  onAdvance: (id: number) => void; onOpenAdd: () => void; onAdd: (title: string) => void; onCloseAdd: () => void
+  onAdvance: (id: string) => void; onOpenAdd: () => void; onAdd: (title: string) => void; onCloseAdd: () => void
 }
 
 export default function BoardColumn({ status: s, tasks, adding, onAdvance, onOpenAdd, onAdd, onCloseAdd }: Props) {

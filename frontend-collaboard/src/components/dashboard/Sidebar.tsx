@@ -1,6 +1,6 @@
-import { Link, NavLink } from 'react-router'
-import { CalendarDays, FolderKanban, LayoutDashboard, LogOut, Settings, SquareKanban, Star, Users, type LucideIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { NavLink } from 'react-router'
+import { CalendarDays, FolderKanban, LayoutDashboard, Settings, SquareKanban, Star, Users, type LucideIcon } from 'lucide-react'
+import LogoutButton from '@/components/common/LogoutButton'
 import Logo from '@/components/common/Logo'
 import { useProfile } from '@/hooks/useProfile'
 import UserAvatar from '@/components/common/UserAvatar'
@@ -37,7 +37,7 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <Button asChild variant="ghost" className="justify-start px-3 max-[900px]:hidden"><Link to="/masuk"><LogOut size={20} strokeWidth={1.75} aria-hidden="true" />Keluar</Link></Button>
+      <LogoutButton variant="ghost" className="justify-start px-3 max-[900px]:hidden" />
     </aside>
   )
 }
