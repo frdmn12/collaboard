@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+export const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 export class ApiError extends Error {
   status: number
@@ -18,6 +18,11 @@ type Envelope<T> = { success: true; data: T } | { success: false; error: { code:
 // Access token hanya di memori (bukan localStorage); refresh token ada di cookie httpOnly.
 let accessToken: string | null = null
 export const setAccessToken = (t: string | null) => { accessToken = t }
+export const getAccessToken = () => accessToken
+
+// Id socket aktif dikirim sebagai X-Socket-Id agar server tidak memantulkan siaran ke pelaku (tab lain tetap menerima).
+let socketId: string | null = null
+export const setSocketId = (id: string | null) => { socketId = id }
 export const EXPIRED_EVENT = 'auth:expired'
 
 async function request<T>(path: string, method: string, body?: unknown, token = accessToken): Promise<T> {
@@ -26,7 +31,7 @@ async function request<T>(path: string, method: string, body?: unknown, token = 
     res = await fetch(`${BASE}${path}`, {
       method,
       credentials: 'include',
-      headers: { ...(body !== undefined && { 'Content-Type': 'application/json' }), ...(token && { Authorization: `Bearer ${token}` }) },
+      headers: { ...(body !== undefined && { 'Content-Type': 'application/json' }), ...(token && { Authorization: `Bearer ${token}` }), ...(socketId && { 'X-Socket-Id': socketId }) },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {

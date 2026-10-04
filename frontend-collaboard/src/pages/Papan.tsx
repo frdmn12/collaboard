@@ -9,14 +9,14 @@ import RequireBoard from '@/components/layout/RequireBoard'
 
 export default function Papan() {
   const [adding, setAdding] = useState<Status | null>(null)
-  const { tasks, visible, addTask, advance, reorder, commitMove, restore, query, setQuery, who, setWho } = useTasks()
+  const { tasks, visible, addTask, advance, reorder, commitMove, restore, setDragging, query, setQuery, who, setWho } = useTasks()
   return (
     <div className="flex flex-col gap-6">
       <Topbar title="Papan" onNew={() => setAdding('todo')} />
       <RequireBoard>
         <BoardHeader />
         <BoardToolbar query={query} onQuery={setQuery} who={who} onWho={setWho} />
-        <KanbanBoard tasks={visible} allTasks={tasks} adding={adding} onAdding={setAdding} onReorder={reorder} onRestore={restore} onCommit={commitMove} onAdd={(t, s) => addTask(t, s)} onAdvance={advance} />
+        <KanbanBoard tasks={visible} allTasks={tasks} adding={adding} onAdding={setAdding} onReorder={reorder} onRestore={restore} onCommit={commitMove} onDragging={setDragging} onAdd={(t, s) => addTask(t, s)} onAdvance={advance} />
       </RequireBoard>
     </div>
   )

@@ -9,6 +9,8 @@ import { BoardMemberRole } from '../boards/board-member.entity';
 import type { Membership } from '../boards/board-roles';
 import { NotificationType } from '../notifications/notification.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeEvent } from '../realtime/realtime.events';
+import { RealtimePublisher } from '../realtime/realtime-publisher';
 import { Task } from '../tasks/task.entity';
 import { CommentPageDto, CommentResponseDto } from './dto/comment-response.dto';
 import {
@@ -27,6 +29,7 @@ export class CommentsService {
     private readonly comments: Repository<TaskComment>,
     @InjectRepository(Task) private readonly tasks: Repository<Task>,
     private readonly notifications: NotificationsService,
+    private readonly realtime: RealtimePublisher,
   ) {}
 
   private viewer(m: Membership) {
@@ -73,7 +76,12 @@ export class CommentsService {
       }),
     );
     await this.notifyParticipants(m, task, saved);
-    return this.get(m, saved.id);
+    return this.publish(
+      RealtimeEvent.COMMENT_CREATED,
+      m,
+      taskId,
+      await this.get(m, saved.id),
+    );
   }
 
   /** Kabari penanggung jawab dan peserta diskusi sebelumnya (pelaku otomatis dikecualikan). */
@@ -121,7 +129,12 @@ export class CommentsService {
         { body: dto.body, editedAt: new Date() },
       );
     }
-    return this.get(m, commentId);
+    return this.publish(
+      RealtimeEvent.COMMENT_UPDATED,
+      m,
+      taskId,
+      await this.get(m, commentId),
+    );
   }
 
   async remove(
@@ -139,6 +152,27 @@ export class CommentsService {
       });
     }
     await this.comments.delete({ id: commentId });
+    this.realtime.toBoard(m.boardId, RealtimeEvent.COMMENT_DELETED, m.userId, {
+      taskId,
+      commentId,
+      commentCount: await this.comments.count({ where: { taskId } }),
+    });
+  }
+
+  /** Siarkan komentar tanpa hak pribadi (`canEdit`/`canDelete`); klien menghitungnya sendiri dari penulis dan perannya. */
+  private async publish(
+    event: string,
+    m: Membership,
+    taskId: string,
+    dto: CommentResponseDto,
+  ): Promise<CommentResponseDto> {
+    const { canEdit: _e, canDelete: _d, ...comment } = dto;
+    this.realtime.toBoard(m.boardId, event, m.userId, {
+      taskId,
+      comment,
+      commentCount: await this.comments.count({ where: { taskId } }),
+    });
+    return dto;
   }
 
   private async get(m: Membership, commentId: string) {

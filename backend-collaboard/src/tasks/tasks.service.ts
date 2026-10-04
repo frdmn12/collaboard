@@ -10,6 +10,8 @@ import { TaskComment } from '../comments/task-comment.entity';
 import { Board } from '../boards/board.entity';
 import { BoardMemberRole } from '../boards/board-member.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeEvent } from '../realtime/realtime.events';
+import { RealtimePublisher } from '../realtime/realtime-publisher';
 import { NotificationType } from '../notifications/notification.entity';
 import {
   MoveTaskDto,
@@ -46,6 +48,7 @@ export class TasksService {
     private readonly comments: Repository<TaskComment>,
     private readonly dataSource: DataSource,
     private readonly notifications: NotificationsService,
+    private readonly realtime: RealtimePublisher,
   ) {}
 
   async list(
@@ -126,7 +129,12 @@ export class TasksService {
         data: { taskTitle: saved.title },
       });
     }
-    return this.get(boardId, saved.id, userId);
+    return this.publish(
+      RealtimeEvent.TASK_CREATED,
+      boardId,
+      userId,
+      await this.get(boardId, saved.id, userId),
+    );
   }
 
   async update(
@@ -159,7 +167,12 @@ export class TasksService {
         data: { taskTitle: dto.title ?? before.title },
       });
     }
-    return this.get(boardId, taskId, userId);
+    return this.publish(
+      RealtimeEvent.TASK_UPDATED,
+      boardId,
+      userId,
+      await this.get(boardId, taskId, userId),
+    );
   }
 
   /**
@@ -173,6 +186,7 @@ export class TasksService {
     dto: MoveTaskDto,
   ): Promise<TaskResponseDto> {
     let movedToReview: string | null = null; // judul tugas bila baru masuk Review
+    const columns: Record<string, string[]> = {}; // urutan id kolom yang terpengaruh, untuk siaran
     await this.dataSource.transaction(async (m) => {
       await m.findOne(Board, {
         where: { id: boardId },
@@ -208,12 +222,33 @@ export class TasksService {
           })
         ).filter((t) => t.id !== taskId);
         await this.renumber(m.getRepository(Task), source);
+        columns[from] = source.map((t) => t.id);
       }
       await this.renumber(m.getRepository(Task), target, task);
+      columns[dto.status] = target.map((t) => t.id);
     });
     if (movedToReview !== null)
       await this.notifyReview(boardId, taskId, userId, movedToReview);
-    return this.get(boardId, taskId, userId);
+    return this.publish(
+      RealtimeEvent.TASK_MOVED,
+      boardId,
+      userId,
+      await this.get(boardId, taskId, userId),
+      { columns },
+    );
+  }
+
+  /** Siarkan versi "bersama" tugas (tanpa `pinned`, yang bersifat pribadi) ke anggota lain yang membuka papan. */
+  private publish(
+    event: string,
+    boardId: string,
+    actorId: string,
+    dto: TaskResponseDto,
+    extra: Record<string, unknown> = {},
+  ): TaskResponseDto {
+    const { pinned: _personal, ...task } = dto;
+    this.realtime.toBoard(boardId, event, actorId, { task, ...extra });
+    return dto;
   }
 
   /** Tugas masuk Review: beri tahu admin papan (selain yang memindahkan). */
@@ -237,9 +272,12 @@ export class TasksService {
     });
   }
 
-  async remove(boardId: string, taskId: string): Promise<void> {
+  async remove(boardId: string, taskId: string, userId: string): Promise<void> {
     const res = await this.tasks.delete({ id: taskId, boardId });
     if (!res.affected) throw this.notFound();
+    this.realtime.toBoard(boardId, RealtimeEvent.TASK_DELETED, userId, {
+      taskId,
+    });
   }
 
   async pin(

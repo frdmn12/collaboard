@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api } from '@/lib/api'
+import { socket } from '@/lib/socket'
 import { errorMessage } from '@/lib/errors'
 import type { AppNotification, NotificationPage } from '@/data/notifications'
 
@@ -40,11 +41,15 @@ function useNotificationState() {
 
   useEffect(() => {
     void refreshCount()
-    const tick = () => { if (document.visibilityState === 'visible') void refreshCount() }
+    // Polling hanya cadangan saat realtime terputus; saat tersambung, server mendorong `notification:new`.
+    const tick = () => { if (document.visibilityState === 'visible' && !socket.connected) void refreshCount() }
+    const onVisible = () => { if (document.visibilityState === 'visible') void refreshCount() }
+    const onNew = () => { void refreshCount(); if (itemsRef.current.length) void refresh(filterRef.current, true) }
     const timer = setInterval(tick, POLL_MS)
-    document.addEventListener('visibilitychange', tick)
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick) }
-  }, [refreshCount])
+    document.addEventListener('visibilitychange', onVisible)
+    socket.on('notification:new', onNew)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); socket.off('notification:new', onNew) }
+  }, [refreshCount, refresh])
 
   const setFilter = (f: NotificationFilter) => { filterRef.current = f; setFilterState(f); void refresh(f) }
 

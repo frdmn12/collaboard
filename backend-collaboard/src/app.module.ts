@@ -16,6 +16,8 @@ import { BoardsModule } from './boards/boards.module';
 import { CommentsModule } from './comments/comments.module';
 import { TasksModule } from './tasks/tasks.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { RealtimePublisherModule } from './realtime/realtime-publisher.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -67,6 +69,8 @@ import { UsersModule } from './users/users.module';
     TasksModule,
     CommentsModule,
     NotificationsModule,
+    RealtimePublisherModule,
+    RealtimeModule,
   ],
 })
 export class AppModule {}

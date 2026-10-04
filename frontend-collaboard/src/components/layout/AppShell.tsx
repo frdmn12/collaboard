@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router'
 import { WorkspaceProvider } from '@/hooks/useWorkspace'
 import { NotificationProvider } from '@/hooks/useNotifications'
+import { RealtimeProvider } from '@/hooks/useRealtime'
 import Sidebar from '@/components/dashboard/Sidebar'
 import SyncNotice from './SyncNotice'
 
@@ -8,6 +9,7 @@ import SyncNotice from './SyncNotice'
 export default function AppShell() {
   return (
     <WorkspaceProvider>
+      <RealtimeProvider>
       <NotificationProvider>
         <div className="-mx-4 grid min-h-dvh grid-cols-[272px_minmax(0,1fr)] max-[900px]:grid-cols-1 max-[900px]:pb-24">
           <Sidebar />
@@ -17,6 +19,7 @@ export default function AppShell() {
         </div>
         <SyncNotice />
       </NotificationProvider>
+      </RealtimeProvider>
     </WorkspaceProvider>
   )
 }

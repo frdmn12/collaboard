@@ -129,3 +129,41 @@ Seluruh endpoint backend terdokumentasi dengan OpenAPI (`@nestjs/swagger`), term
 - Cookie refresh token (`refresh_token`) dipasang browser saat login lewat `Set-Cookie`; "Try it out" untuk `/auth/refresh` memakainya otomatis hanya bila UI dan API satu origin.
 - Ekspor spesifikasi (mis. untuk generator klien atau Postman): `curl -o openapi.json http://localhost:3000/docs-json`.
 - Properti DTO diturunkan otomatis oleh plugin Swagger di `nest-cli.json` saat `nest build`/`nest start`; tes e2e (ts-jest) tidak memakainya dan tidak terpengaruh.
+
+## Backend: Papan realtime
+
+Perubahan tetap ditulis lewat REST; server menyiarkan hasilnya lewat **Socket.IO** (path `/socket.io`) ke semua anggota yang sedang membuka papan. Banyak instance backend saling meneruskan siaran lewat Redis (`@socket.io/redis-adapter` untuk room/presence, `@socket.io/redis-emitter` untuk siaran dari service).
+
+**Menyambung:** `io(API_URL, { auth: { token: <accessToken> } })`. Tanpa token valid koneksi ditolak (`connect_error` dengan pesan `UNAUTHORIZED`). Saat access token kedaluwarsa server mengirim `auth:expired` lalu memutus; klien memperbarui token (`POST /auth/refresh`) dan menyambung ulang.
+
+**Dari klien** (dengan ack):
+
+| Event | Payload | Ack |
+|---|---|---|
+| `board:join` | `{ boardId }` | `{ ok: true, presence: [{id, name}] }` atau `{ ok: false, code: 'BOARD_NOT_FOUND' \| 'TOO_MANY_BOARDS' }` (bukan anggota = `BOARD_NOT_FOUND`) |
+| `board:leave` | `{ boardId }` | `{ ok }` |
+| `cursor:move` | `{ boardId, x, y }` | tanpa ack. `x` = pecahan lebar area papan (termasuk bagian yang tergulir), `y` = piksel dari tepi atas area. Hanya diteruskan bila socket sudah `board:join`; payload tidak valid atau di luar rentang (x -0.5..1.5, y -2000..200000) dibuang; dibatasi rata-rata 30 pesan/detik (burst 10), kelebihannya dibuang |
+| `cursor:hide` | `{ boardId }` | tanpa ack |
+
+**Dari server** (payload papan selalu memuat `boardId`, `actorId`, `at`):
+
+| Event | Isi tambahan | Catatan |
+|---|---|---|
+| `task:created` / `task:updated` | `task` | Tanpa `pinned` (sematan bersifat pribadi); memuat `commentCount` |
+| `task:moved` | `task`, `columns` | `columns` = `{ [status]: taskId[] }` urutan baru kolom asal dan tujuan |
+| `task:deleted` | `taskId` | |
+| `comment:created` / `comment:updated` | `taskId`, `comment`, `commentCount` | Tanpa `canEdit`/`canDelete`; klien menghitung dari penulis dan peran |
+| `comment:deleted` | `taskId`, `commentId`, `commentCount` | |
+| `member:added` / `member:updated` | `member` | |
+| `member:removed` | `userId` | Diterima juga oleh yang dikeluarkan; setelah itu socket-nya dikeluarkan dari room |
+| `board:updated` | `board` (`id`, `name`, `description`, `updatedAt`) | |
+| `board:deleted` | | Room dibubarkan |
+| `cursor:move` | `boardId`, `socketId`, `userId`, `name`, `x`, `y` | Posisi kursor anggota lain; tidak disimpan dan dikirim `volatile` (boleh hilang). Tidak dikirim ke pengirimnya |
+| `cursor:hide` | `boardId`, `socketId` | Kursor itu disembunyikan: pengirim menyembunyikan, meninggalkan papan, atau terputus |
+| `presence:update` | `boardId`, `users: [{id, name}]` | Pengguna unik (banyak tab dihitung satu) |
+| `notification:new` | `type` | Ke room pribadi pengguna, tanpa perlu membuka papan; klien memuat ulang `unread-count` |
+
+**Menghindari pantulan:** kirim header `X-Socket-Id: <socket.id>` pada permintaan REST; socket itu dikecualikan dari siaran perubahan yang ia buat sendiri (tab lain milik pengguna yang sama tetap menerima).
+
+**Keamanan:** keanggotaan diperiksa saat `board:join`; anggota yang dikeluarkan langsung dikeluarkan dari room. Perubahan lewat socket tidak ada (hanya join/leave).
+

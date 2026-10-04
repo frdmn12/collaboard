@@ -103,7 +103,7 @@ export class BoardsController {
     @CurrentMembership() m: Membership,
     @Body() dto: UpdateBoardDto,
   ): Promise<BoardResponseDto> {
-    return this.boards.update(m.boardId, m.role, dto);
+    return this.boards.update(m.boardId, m.role, dto, m.userId);
   }
 
   @ApiOperation({

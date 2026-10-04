@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+import { RedisIoAdapter } from './realtime/redis-io.adapter';
+import { requestContextMiddleware } from './realtime/request-context';
 import { ResponseInterceptor } from './common/interceptors/response/response.interceptor';
 
 /** Konfigurasi HTTP yang dipakai bersama oleh main.ts dan test e2e. */
@@ -10,6 +12,8 @@ export function configureApp(app: INestApplication) {
   const config = app.get(ConfigService);
   app.use(helmet());
   app.use(cookieParser());
+  app.use(requestContextMiddleware);
+  app.useWebSocketAdapter(new RedisIoAdapter(app));
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(

@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { RealtimeEvent } from '../realtime/realtime.events';
+import { RealtimePublisher } from '../realtime/realtime-publisher';
 import { Task } from '../tasks/task.entity';
 import { BoardMember, BoardMemberRole } from './board-member.entity';
 import { Board } from './board.entity';
@@ -21,6 +23,7 @@ export class BoardsService {
     private readonly members: Repository<BoardMember>,
     @InjectRepository(Task) private readonly tasks: Repository<Task>,
     private readonly dataSource: DataSource,
+    private readonly realtime: RealtimePublisher,
   ) {}
 
   findMembership(boardId: string, userId: string) {
@@ -88,6 +91,7 @@ export class BoardsService {
     boardId: string,
     role: BoardMemberRole,
     dto: UpdateBoardDto,
+    actorId: string,
   ): Promise<BoardResponseDto> {
     await this.boards.update(
       { id: boardId },
@@ -98,7 +102,16 @@ export class BoardsService {
         }),
       },
     );
-    return this.get(boardId, role);
+    const board = await this.get(boardId, role);
+    this.realtime.toBoard(boardId, RealtimeEvent.BOARD_UPDATED, actorId, {
+      board: {
+        id: board.id,
+        name: board.name,
+        description: board.description,
+        updatedAt: board.updatedAt,
+      },
+    });
+    return board;
   }
 
   /** Hanya pemilik yang boleh menghapus papan (beserta seluruh tugas dan anggotanya). */
@@ -115,6 +128,8 @@ export class BoardsService {
         message: 'Only the board owner can delete it',
       });
     await this.boards.delete({ id: boardId });
+    this.realtime.toBoard(boardId, RealtimeEvent.BOARD_DELETED, userId);
+    this.realtime.closeBoard(boardId);
   }
 
   private async statsFor(boardIds: string[]): Promise<Map<string, Stats>> {

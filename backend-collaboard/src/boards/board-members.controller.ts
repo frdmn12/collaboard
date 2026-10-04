@@ -100,7 +100,7 @@ export class BoardMembersController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Body() dto: UpdateMemberDto,
   ): Promise<MemberResponseDto> {
-    return this.members.updateRole(m.boardId, userId, dto);
+    return this.members.updateRole(m.boardId, userId, dto, m.userId);
   }
 
   @ApiOperation({

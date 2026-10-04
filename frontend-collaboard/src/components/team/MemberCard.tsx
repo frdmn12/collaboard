@@ -3,18 +3,21 @@ import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import UserAvatar from '@/components/common/UserAvatar'
 import { tintOf } from '@/data/dashboard'
+import { useRealtime } from '@/hooks/useRealtime'
 import { boardRoleLabel, type Member } from '@/data/team'
 
 type Props = { member: Member & { active: number; done: number } }
 
 export default function MemberCard({ member: m }: Props) {
+  const online = useRealtime().isOnline(m.userId)
   return (
     <Card className="gap-4 p-6">
       <div className="flex items-center gap-4">
         <UserAvatar name={m.name} tint={tintOf(m.name)} size="default" className="size-14 text-lg" />
         <div className="flex min-w-0 flex-col">
           <h3 className="text-2xl leading-tight font-semibold tracking-[-0.02em]">{m.name}</h3>
-          <span className="text-base text-muted-foreground">{m.isOwner ? 'Pemilik' : boardRoleLabel[m.role]}</span>
+          <span className="flex items-center gap-2 text-base text-muted-foreground">{m.isOwner ? 'Pemilik' : boardRoleLabel[m.role]}
+            {online && <span className="inline-flex items-center gap-1 text-xs"><span className="size-2 rounded-full bg-status-done" aria-hidden="true" />Online</span>}</span>
         </div>
       </div>
       <a href={`mailto:${m.email}`} className="inline-flex items-center gap-2 truncate text-sm text-muted-foreground hover:text-foreground">

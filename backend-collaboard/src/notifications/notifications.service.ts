@@ -2,6 +2,8 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { Board } from '../boards/board.entity';
+import { RealtimeEvent } from '../realtime/realtime.events';
+import { RealtimePublisher } from '../realtime/realtime-publisher';
 import {
   NotificationPageDto,
   NotificationResponseDto,
@@ -52,6 +54,7 @@ export class NotificationsService {
     @InjectRepository(NotificationPreference)
     private readonly prefs: Repository<NotificationPreference>,
     @InjectRepository(Board) private readonly boards: Repository<Board>,
+    private readonly realtime: RealtimePublisher,
   ) {}
 
   /**
@@ -92,6 +95,10 @@ export class NotificationsService {
           data,
         })),
       );
+      // Dorong ke room pribadi; klien cukup memuat ulang hitungan/daftar notifikasi.
+      this.realtime.toUsers(targets, RealtimeEvent.NOTIFICATION_NEW, {
+        type: input.type,
+      });
     } catch (err) {
       this.logger.error(
         `Gagal membuat notifikasi ${input.type}`,

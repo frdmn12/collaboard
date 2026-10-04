@@ -9,6 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotificationType } from '../notifications/notification.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeEvent } from '../realtime/realtime.events';
+import { RealtimePublisher } from '../realtime/realtime-publisher';
 import { UsersService } from '../users/users.service';
 import { BoardMember, BoardMemberRole } from './board-member.entity';
 import { Board } from './board.entity';
@@ -23,6 +25,7 @@ export class BoardMembersService {
     @InjectRepository(Board) private readonly boards: Repository<Board>,
     private readonly users: UsersService,
     private readonly notifications: NotificationsService,
+    private readonly realtime: RealtimePublisher,
   ) {}
 
   async list(boardId: string): Promise<MemberResponseDto[]> {
@@ -66,13 +69,18 @@ export class BoardMembersService {
       actorId,
       boardId,
     });
-    return this.get(boardId, user.id);
+    const member = await this.get(boardId, user.id);
+    this.realtime.toBoard(boardId, RealtimeEvent.MEMBER_ADDED, actorId, {
+      member,
+    });
+    return member;
   }
 
   async updateRole(
     boardId: string,
     userId: string,
     dto: UpdateMemberDto,
+    actorId: string,
   ): Promise<MemberResponseDto> {
     if (userId === (await this.ownerOf(boardId))) {
       throw new ForbiddenException({
@@ -85,7 +93,11 @@ export class BoardMembersService {
       { role: dto.role },
     );
     if (!res.affected) throw this.notMember();
-    return this.get(boardId, userId);
+    const member = await this.get(boardId, userId);
+    this.realtime.toBoard(boardId, RealtimeEvent.MEMBER_UPDATED, actorId, {
+      member,
+    });
+    return member;
   }
 
   /** Admin boleh mengeluarkan siapa pun kecuali pemilik; anggota boleh keluar sendiri. */
@@ -108,6 +120,11 @@ export class BoardMembersService {
     }
     const res = await this.members.delete({ boardId, userId });
     if (!res.affected) throw this.notMember();
+    // Kabari seisi room (termasuk yang dikeluarkan), baru cabut akses socket-nya.
+    this.realtime.toBoard(boardId, RealtimeEvent.MEMBER_REMOVED, actor.userId, {
+      userId,
+    });
+    this.realtime.removeUserFromBoard(boardId, userId);
   }
 
   private async get(boardId: string, userId: string) {

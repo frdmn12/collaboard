@@ -36,6 +36,7 @@ import { TokenService } from './token.service';
     UsersModule,
     MailModule,
   ],
+  exports: [JwtModule],
   controllers: [AuthController],
   providers: [
     AuthService,

@@ -168,7 +168,7 @@ export class TasksController {
     @CurrentMembership() m: Membership,
     @Param('taskId', ParseUUIDPipe) taskId: string,
   ): Promise<void> {
-    return this.tasks.remove(m.boardId, taskId);
+    return this.tasks.remove(m.boardId, taskId, m.userId);
   }
 
   @ApiOperation({
