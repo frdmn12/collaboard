@@ -1,18 +1,21 @@
 import { useRef, useState } from 'react'
 import { useDashboardMotion } from '@/hooks/useDashboardMotion'
 import { useTasks } from '@/hooks/useTasks'
-import Sidebar from '@/components/dashboard/Sidebar'
+import type { Status } from '@/data/dashboard'
 import Topbar from '@/components/dashboard/Topbar'
 import Greeting from '@/components/dashboard/Greeting'
 import StatCards from '@/components/dashboard/StatCards'
+import BoardToolbar from '@/components/dashboard/BoardToolbar'
 import Board from '@/components/dashboard/Board'
 import TeamLoad from '@/components/dashboard/TeamLoad'
 import ActivityList from '@/components/dashboard/ActivityList'
+import type { View } from '@/components/dashboard/ViewToggle'
 
 export default function Dashboard() {
   const root = useRef<HTMLDivElement>(null)
-  const [adding, setAdding] = useState(false)
-  const { tasks, count, percent, load, advance, add } = useTasks()
+  const [adding, setAdding] = useState<Status | null>(null)
+  const [view, setView] = useState<View>('grid')
+  const { tasks, visible, count, percent, load, advance, add, query, setQuery, who, setWho } = useTasks()
   useDashboardMotion(root)
 
   const stats = [
@@ -22,15 +25,15 @@ export default function Dashboard() {
   ]
 
   return (
-    <div ref={root} className="mx-auto grid min-h-dvh max-w-[1500px] grid-cols-[248px_minmax(0,1fr)] gap-4 py-4 max-[900px]:grid-cols-1 max-[900px]:pb-24">
-      <Sidebar />
-      <main className="flex min-w-0 flex-col gap-8 px-2 pb-12">
-        <Topbar onNew={() => setAdding(true)} />
-        <Greeting active={count('doing') + count('review')} />
-        <StatCards stats={stats} />
-        <Board tasks={tasks} adding={adding} onOpenAdd={() => setAdding(true)} onCloseAdd={() => setAdding(false)} onAdd={add} onAdvance={advance} />
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4"><TeamLoad load={load} /><ActivityList /></div>
-      </main>
+    <div ref={root} className="flex flex-col gap-8">
+      <Topbar title="Dasbor" onNew={() => setAdding('todo')} />
+      <Greeting active={count('doing') + count('review')} />
+      <StatCards stats={stats} />
+      <section aria-label="Papan tugas" className="flex flex-col gap-4">
+        <BoardToolbar query={query} onQuery={setQuery} who={who} onWho={setWho} view={view} onView={setView} />
+        <Board tasks={visible} view={view} adding={adding} onAdding={setAdding} onAdd={add} onAdvance={advance} />
+      </section>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4"><TeamLoad load={load} /><ActivityList /></div>
     </div>
   )
 }

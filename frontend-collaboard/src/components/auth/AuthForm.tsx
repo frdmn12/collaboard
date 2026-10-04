@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import FormField from './FormField'
+import FormField from '@/components/common/FormField'
 import PasswordInput from './PasswordInput'
 
 export type Mode = 'login' | 'register'

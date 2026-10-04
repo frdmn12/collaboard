@@ -1,15 +1,20 @@
-import { statuses, type Task } from '@/data/dashboard'
+import { statuses, type Status, type Task } from '@/data/dashboard'
+import { cn } from '@/lib/utils'
 import BoardColumn from './BoardColumn'
+import type { View } from './ViewToggle'
 
-type Props = { tasks: Task[]; adding: boolean; onOpenAdd: () => void; onCloseAdd: () => void; onAdd: (title: string) => void; onAdvance: (id: number) => void }
+type Props = {
+  tasks: Task[]; view: View; adding: Status | null
+  onAdding: (s: Status | null) => void; onAdd: (title: string, s: Status) => void; onAdvance: (id: number) => void
+}
 
-export default function Board({ tasks, adding, onOpenAdd, onCloseAdd, onAdd, onAdvance }: Props) {
+export default function Board({ tasks, view, adding, onAdding, onAdd, onAdvance }: Props) {
   return (
-    <section aria-label="Papan tugas" className="grid grid-cols-[repeat(auto-fit,minmax(230px,1fr))] items-start gap-4">
+    <div aria-label="Papan tugas" className={cn('grid gap-4', view === 'grid' ? 'grid-cols-2 items-stretch max-[900px]:grid-cols-1' : 'grid-cols-[repeat(auto-fit,minmax(230px,1fr))] items-start')}>
       {statuses.map((s) => (
-        <BoardColumn key={s.id} status={s} tasks={tasks.filter((t) => t.status === s.id)} onAdvance={onAdvance}
-          {...(s.id === 'todo' ? { adding, onOpenAdd, onAdd, onCloseAdd } : {})} />
+        <BoardColumn key={s.id} status={s} tasks={tasks.filter((t) => t.status === s.id)} adding={adding === s.id} onAdvance={onAdvance}
+          onOpenAdd={() => onAdding(s.id)} onCloseAdd={() => onAdding(null)} onAdd={(title) => onAdd(title, s.id)} />
       ))}
-    </section>
+    </div>
   )
 }
