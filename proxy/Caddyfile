@@ -1,0 +1,12 @@
+# Satu Caddy untuk semua aplikasi di VPS. Satu blok per aplikasi: domain -> nama container:port.
+# Ganti domain contoh di bawah, lalu: docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+# Caddy mengurus sertifikat HTTPS (Let's Encrypt) otomatis; WebSocket jalan tanpa konfigurasi tambahan.
+
+api.domainmu.com {
+	reverse_proxy collab-server:3000
+}
+
+# Aplikasi berikutnya:
+# api.app2.domainmu.com {
+# 	reverse_proxy app2-server:8000
+# }

@@ -18,9 +18,5 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
-    parser: "@typescript-eslint/parser",
-    parserOptions: {
-      project: ["./tsconfig.json"],
-    },
   },
 ]);
