@@ -1,0 +1,71 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+    paths: ['backend-collaboard/**', 'docker-compose.prod.yml', '.github/workflows/**'] # frontend dideploy Vercel sendiri
+  workflow_dispatch: # tombol "Run workflow" manual di tab Actions
+
+concurrency: deploy # jangan ada dua deploy berjalan bersamaan
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # izin push image ke GHCR
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend-collaboard
+          file: backend-collaboard/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/server:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/server:latest
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,scope=server,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production # bisa diberi aturan approval di Settings → Environments
+    steps:
+      - uses: actions/checkout@v4
+      - name: Siapkan SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+      - name: Kirim file compose
+        run: scp docker-compose.prod.yml ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/collaboard/
+      - name: Tarik image dan restart
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash -s <<'REMOTE'
+          set -e
+          cd /opt/collaboard
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          export IMAGE_REPO=ghcr.io/${{ github.repository }} IMAGE_TAG=${{ github.sha }}
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+          docker image prune -f
+          REMOTE
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 20); do
+            curl -fsS "${{ vars.API_URL }}/health" && exit 0
+            sleep 3
+          done
+          echo "health check gagal" && exit 1

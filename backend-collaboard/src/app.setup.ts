@@ -1,5 +1,6 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
@@ -10,6 +11,8 @@ import { ResponseInterceptor } from './common/interceptors/response/response.int
 /** Konfigurasi HTTP yang dipakai bersama oleh main.ts dan test e2e. */
 export function configureApp(app: INestApplication) {
   const config = app.get(ConfigService);
+  // Di belakang Caddy: tanpa ini semua klien terbaca satu IP dan rate limit /auth salah sasaran.
+  (app as NestExpressApplication).set('trust proxy', 1);
   app.use(helmet());
   app.use(cookieParser());
   app.use(requestContextMiddleware);

@@ -57,8 +57,10 @@ import { UsersModule } from './users/users.module';
           password: config.getOrThrow<string>('POSTGRES_PASSWORD'),
           database: config.getOrThrow<string>('POSTGRES_DB'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          // ponytail: synchronize hanya untuk dev; production butuh migrasi TypeORM.
           synchronize: !production,
+          // Production: skema hanya berubah lewat migrasi (npm run migration:generate).
+          migrations: [__dirname + '/migrations/*{.ts,.js}'],
+          migrationsRun: production,
           logging: ['error', 'warn'],
         };
       },
