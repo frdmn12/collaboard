@@ -40,7 +40,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: production # bisa diberi aturan approval di Settings → Environments
+    environment: production_2 # bisa diberi aturan approval di Settings → Environments
     steps:
       - uses: actions/checkout@v4
       - name: Siapkan SSH
