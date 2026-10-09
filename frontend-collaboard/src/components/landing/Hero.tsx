@@ -15,7 +15,7 @@ export default function Hero() {
         <p data-m="hero-item" className="text-lead max-w-[30em] text-[#222326]/75!">Atur tugas, pantau progres, dan tahu siapa mengerjakan apa tanpa perlu bertanya di grup chat.</p>
         <div data-m="hero-item" className="flex flex-wrap justify-center gap-4">
           <Button asChild><Link to="/daftar">Buat papan pertama</Link></Button>
-          <Button asChild variant="secondary"><a href="#fitur">Lihat cara kerjanya</a></Button>
+          <Button asChild variant="secondary"><Link to="/playground">Coba di Playground</Link></Button>
         </div>
         <p data-m="hero-item" className="text-xs leading-none font-medium text-white"><span className="mr-1 text-sm tracking-[2px] text-pinned">★★★★★</span> 4,9 dari 12.000 tim</p>
         <BoardPreview />

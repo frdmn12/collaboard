@@ -167,3 +167,44 @@ Perubahan tetap ditulis lewat REST; server menyiarkan hasilnya lewat **Socket.IO
 
 **Keamanan:** keanggotaan diperiksa saat `board:join`; anggota yang dikeluarkan langsung dikeluarkan dari room. Perubahan lewat socket tidak ada (hanya join/leave).
 
+
+## Playground (tamu tanpa login)
+
+Laman publik `/playground` (tombol "Coba di Playground" di landing): pengunjung mencoba papan demo bersama, mengirim reaksi, dan melihat siapa saja yang sedang online, tanpa akun. Kode: `backend-collaboard/src/playground/`, `frontend-collaboard/src/pages/Playground.tsx`.
+
+**Desain beban:** pengunjung dibagi ke **ruang** berisi maksimal 50 orang (ruang bernomor terkecil yang belum penuh). Server hanya mengenal nomor; frontend menampilkannya sebagai nama pulau (`roomName` di `data/playground.ts`: 1 = Bali, 2 = Lombok, …, ke-17 = Bali 2). Daftar orang, kursor, reaksi, dan papan demo hanya disiarkan di dalam ruang, jadi biayanya tetap per ruang berapa pun jumlah pengunjung. Yang global hanya jumlah online:
+
+- Tiap instance mencatat jumlah orang per ruang di Redis (`pg:rooms:{instanceId}`, TTL 15 detik, diperpanjang tiap 2 detik); instance yang mati hilang sendiri dari hitungan.
+- Tiap 2 detik setiap instance menjumlahkan semua ruang dan mengirim `online` ke socket miliknya sendiri, hanya bila angkanya berubah.
+- Masuk/keluar dikirim sebagai perubahan (`presence:join` / `presence:leave`), bukan daftar penuh. Snapshot daftar hanya sebesar satu ruang.
+- Isi papan demo per ruang disimpan di Redis (`pg:board:{ruang}`, TTL 1 jam) dan direset saat orang pertama masuk ke ruang kosong.
+
+Batas yang diketahui: hitungan ruang bisa basi sampai 2 detik, jadi saat lonjakan sebuah ruang bisa sedikit melewati 50 (batas lunak). Batas koneksi per IP dihitung per instance.
+
+**Menyambung:** `io(API_URL + '/playground', { auth: { name, tz } })`. Tanpa token; `name` opsional (dibersihkan dari karakter kontrol, maksimal 24 karakter, kosong = `Tamu 123`); `tz` opsional, lihat Lokasi di bawah. Maksimal 5 koneksi per IP (IP = entri terakhir `X-Forwarded-For` dari Caddy); kelebihannya ditolak dengan `connect_error` pesan `TOO_MANY_CONNECTIONS`.
+
+**Dari klien** (kelebihan laju dibuang diam-diam):
+
+| Event | Payload | Ack / batas |
+|---|---|---|
+| `rename` | `{ name }` | `{ ok: true, name }` atau `{ ok: false }`; 1/detik (burst 3) |
+| `location` | `{ tz: 'Asia/Makassar' \| null }` | `{ ok: true, tz }` atau `{ ok: false }` (bukan zona IANA yang dikenali); 1/detik (burst 3) |
+| `task:move` | `{ taskId: 't1'..'t6', status: 'doing' \| 'review' \| 'done' }` | `{ ok }`; 4/detik (burst 6) |
+| `react` | `{ kind: 'like' \| 'love' \| 'fire' \| 'party' }` | tanpa ack; 3/detik (burst 5) |
+| `cursor:move` | `{ x, y }` | tanpa ack; aturan koordinat sama dengan papan (x -0.5..1.5, y -2000..20000); 20/detik (burst 10) |
+| `cursor:hide` | | tanpa ack |
+
+**Dari server:**
+
+| Event | Isi | Catatan |
+|---|---|---|
+| `welcome` | `self`, `room`, `members: [{id, name, tz}]`, `board: { [taskId]: status }`, `total` | Dikirim sekali setelah tersambung (dan lagi setiap sambung ulang, dengan id baru) |
+| `presence:join` / `presence:leave` / `presence:update` | `{ id, name, tz }` | `presence:update` = nama atau lokasi berubah. Hanya ke ruang yang sama, tidak ke pengirimnya |
+| `online` | `{ total }` | Jumlah online di semua ruang dan instance |
+| `task:moved` | `taskId`, `status`, `by` | Tidak ke pengirimnya (klien sudah memperbarui sendiri) |
+| `react` | `id`, `name`, `kind` | `volatile` |
+| `cursor:move` / `cursor:hide` | `id`, `name`, `x`, `y` / `id` | `cursor:move` dikirim `volatile`; kursor juga hilang saat `presence:leave` |
+
+**Lokasi (opt-in):** mati secara bawaan; tamu menyalakannya lewat toggle "Tampilkan lokasiku" (pilihan diingat di `localStorage`). Klien mengirim zona waktu perangkat (`Intl.DateTimeFormat().resolvedOptions().timeZone`), bukan GPS atau IP, jadi hanya perkiraan dan bisa dipalsukan. Server hanya menerima nama zona IANA yang valid (teks bebas ditolak), tidak menyimpannya di Redis atau log, dan hanya meneruskannya ke ruang yang sama. Tampil hanya di daftar online (tidak ikut payload kursor): `Indonesia · WIB/WITA/WIT` untuk zona Indonesia, selain itu nama kota zona (`Asia/Tokyo` = Tokyo).
+
+Judul kartu demo ada di `frontend-collaboard/src/data/playground.ts`; id dan status awalnya harus sama dengan `DEMO_TASKS` di gateway. Tes: `npx jest --config test/jest-e2e.json test/playground.e2e-spec.ts`.
