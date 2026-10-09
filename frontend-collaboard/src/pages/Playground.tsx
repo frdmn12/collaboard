@@ -1,3 +1,4 @@
+import { useSeo } from '@/hooks/useSeo'
 import { usePlayground } from '@/hooks/usePlayground'
 import PlaygroundNav from '@/components/playground/PlaygroundNav'
 import PlaygroundIntro from '@/components/playground/PlaygroundIntro'
@@ -12,6 +13,7 @@ import SiteFooter from '@/components/landing/SiteFooter'
 /** Laman publik: tamu tanpa akun mencoba papan bersama dan melihat siapa saja yang sedang online. */
 export default function Playground() {
   const pg = usePlayground()
+  useSeo({ title: 'Playground', path: '/playground', description: 'Coba Collaboard tanpa akun: geser kartu di papan demo bersama pengunjung lain, kirim reaksi, dan lihat siapa yang sedang online.' })
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-10 px-4 pt-4">
       <PlaygroundNav />

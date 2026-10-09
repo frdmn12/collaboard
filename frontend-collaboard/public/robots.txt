@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+# Laman aplikasi butuh login; tidak ada isinya untuk crawler.
+Disallow: /dashboard
+Disallow: /papan
+Disallow: /disematkan
+Disallow: /proyek
+Disallow: /tim
+Disallow: /kalender
+Disallow: /pengaturan
+
+Sitemap: https://collaboard.timulabs.dev/sitemap.xml
