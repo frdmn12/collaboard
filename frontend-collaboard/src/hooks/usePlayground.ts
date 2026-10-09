@@ -43,7 +43,9 @@ export function usePlayground() {
   }
 
   useEffect(() => {
-    const s = io(`${BASE}/playground`, { transports: ['websocket'], auth: (cb) => cb({ name: nameRef.current, tz: tzRef.current }) })
+    // forceNew: io() memakai ulang Manager per origin; Manager milik lib/socket.ts dibuat dengan autoConnect:false,
+    // jadi tanpa ini socket /playground ikut tidak pernah tersambung.
+    const s = io(`${BASE}/playground`, { forceNew: true, transports: ['websocket'], auth: (cb) => cb({ name: nameRef.current, tz: tzRef.current }) })
     const put = (g: Guest) => setMembers((m) => new Map(m).set(g.id, g))
     s.on('welcome', (w: Welcome) => {
       setSelf(w.self); setRoom(w.room); setBoard(w.board); setTotal(w.total); setStatus('online')
