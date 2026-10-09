@@ -15,6 +15,7 @@ import Tim from './pages/Tim'
 import Kalender from './pages/Kalender'
 import Pengaturan from './pages/Pengaturan'
 import Playground from './pages/Playground'
+import NotFound from './pages/NotFound'
 import AppShell from './components/layout/AppShell'
 import { GuestRoute, ProtectedRoute } from './components/auth/RouteGuards'
 
@@ -44,7 +45,7 @@ export default function App() {
                 <Route path="/pengaturan" element={<Pengaturan />} />
               </Route>
             </Route>
-            <Route path="*" element={<Landing />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
       </ProfileProvider>
     </AuthProvider>

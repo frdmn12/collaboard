@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router'
+import { useSeo } from '@/hooks/useSeo'
 import { WorkspaceProvider } from '@/hooks/useWorkspace'
 import { NotificationProvider } from '@/hooks/useNotifications'
 import { RealtimeProvider } from '@/hooks/useRealtime'
@@ -7,6 +8,7 @@ import SyncNotice from './SyncNotice'
 
 /** Kerangka laman aplikasi. Data kerja dimuat per pengguna dan dibuang saat keluar. */
 export default function AppShell() {
+  useSeo({ noindex: true })
   return (
     <WorkspaceProvider>
       <RealtimeProvider>
