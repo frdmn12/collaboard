@@ -5,6 +5,7 @@ import { errorMessage } from '@/lib/errors'
 import { nextStatus, statuses, type Status, type Task } from '@/data/dashboard'
 import type { Member } from '@/data/team'
 import { toTask, type ApiTask, type Board } from '@/data/workspace'
+import { tt } from '@/lib/i18n'
 
 const KEY = 'collaboard-board'
 const stored = () => { try { return localStorage.getItem(KEY) } catch { return null } }
@@ -117,7 +118,7 @@ function useWorkspaceState() {
         return
       case 'member:added': case 'member:updated': case 'member:removed':
         if (event === 'member:removed' && p.userId === user?.id) {
-          setNotice('Anda dikeluarkan dari proyek ini.')
+          setNotice(tt('Anda dikeluarkan dari proyek ini.', 'You were removed from this project.'))
           void refreshBoards().catch(() => undefined)
           return
         }
@@ -128,7 +129,7 @@ function useWorkspaceState() {
         setBoards((cur) => cur.map((b) => (b.id === p.board.id ? { ...b, name: p.board.name, description: p.board.description, updatedAt: p.board.updatedAt } : b)))
         return
       case 'board:deleted':
-        if (here) setNotice('Proyek ini telah dihapus.')
+        if (here) setNotice(tt('Proyek ini telah dihapus.', 'This project was deleted.'))
         void refreshBoards().catch(() => undefined)
     }
   }

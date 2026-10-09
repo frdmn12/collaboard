@@ -1,3 +1,5 @@
+import { tt } from '@/lib/i18n'
+
 export type NotificationType = 'task_assigned' | 'comment_added' | 'review_requested' | 'board_added'
 
 export type AppNotification = {
@@ -17,11 +19,11 @@ export type NotificationPrefs = { assigned: boolean; comment: boolean; review: b
 
 /** Kalimat notifikasi tanpa nama aktor (aktor ditebalkan terpisah). */
 export function notificationText(n: AppNotification): string {
-  const task = `"${n.data.taskTitle ?? 'tugas'}"`
+  const task = `"${n.data.taskTitle ?? tt('tugas', 'a task')}"`
   switch (n.type) {
-    case 'task_assigned': return `menugaskan Anda pada ${task}`
-    case 'comment_added': return `berkomentar di ${task}`
-    case 'review_requested': return `memindahkan ${task} ke Review`
-    case 'board_added': return `menambahkan Anda ke proyek "${n.data.boardName ?? 'baru'}"`
+    case 'task_assigned': return tt(`menugaskan Anda pada ${task}`, `assigned you to ${task}`)
+    case 'comment_added': return tt(`berkomentar di ${task}`, `commented on ${task}`)
+    case 'review_requested': return tt(`memindahkan ${task} ke Review`, `moved ${task} to Review`)
+    case 'board_added': return tt(`menambahkan Anda ke proyek "${n.data.boardName ?? 'baru'}"`, `added you to the project "${n.data.boardName ?? 'new'}"`)
   }
 }

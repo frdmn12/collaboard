@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { io, type Socket } from 'socket.io-client'
 import { BASE } from '@/lib/api'
+import { tt, type Txt } from '@/lib/i18n'
 import { demoColumns, demoTasks, deviceTz, type DemoStatus, type ReactionKind } from '@/data/playground'
 
 export type Guest = { id: string; name: string; tz: string | null }
-export type Activity = { key: number; text: string }
+/** Disimpan sebagai pasangan [id, en] agar ikut berganti saat bahasa diganti. */
+export type Activity = { key: number; text: Txt }
 export type Reaction = { key: number; kind: ReactionKind; name: string }
 type Welcome = { self: Guest; room: number; members: Guest[]; board: Record<string, DemoStatus>; total: number }
 
@@ -15,7 +17,7 @@ const REACTION_MS = 2400
 
 const read = (k: string) => { try { return localStorage.getItem(k) ?? '' } catch { return '' } }
 const save = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* mode privat: abaikan */ } }
-const titleOf = (id: string) => demoTasks.find((t) => t.id === id)?.title ?? 'kartu'
+const titleOf = (id: string): Txt => demoTasks.find((t) => t.id === id)?.title ?? ['kartu', 'a card']
 const columnOf = (s: DemoStatus) => demoColumns.find((c) => c.id === s)?.name ?? s
 
 /** Koneksi tamu ke namespace /playground: presence ruang, jumlah online global, papan demo, dan reaksi. */
@@ -35,7 +37,7 @@ export function usePlayground() {
   const tzRef = useRef(sharing ? deviceTz() : null)
   const seq = useRef(0)
 
-  const log = (text: string) => setActivity((a) => [{ key: ++seq.current, text }, ...a].slice(0, MAX_ACTIVITY))
+  const log = (text: Txt) => setActivity((a) => [{ key: ++seq.current, text }, ...a].slice(0, MAX_ACTIVITY))
   const float = (kind: ReactionKind, name: string) => {
     const key = ++seq.current
     setFloating((f) => [...f, { key, kind, name }])
@@ -51,16 +53,16 @@ export function usePlayground() {
       setSelf(w.self); setRoom(w.room); setBoard(w.board); setTotal(w.total); setStatus('online')
       setMembers(new Map(w.members.map((g) => [g.id, g])))
     })
-    s.on('presence:join', (g: Guest) => { put(g); log(`${g.name} masuk`) })
+    s.on('presence:join', (g: Guest) => { put(g); log([`${g.name} masuk`, `${g.name} joined`]) })
     s.on('presence:update', put)
     s.on('presence:leave', (g: Guest) => {
-      log(`${g.name} keluar`)
+      log([`${g.name} keluar`, `${g.name} left`])
       setMembers((m) => { const n = new Map(m); n.delete(g.id); return n })
     })
     s.on('online', ({ total }: { total: number }) => setTotal(total))
     s.on('task:moved', ({ taskId, status, by }: { taskId: string; status: DemoStatus; by: string }) => {
       setBoard((b) => ({ ...b, [taskId]: status }))
-      log(`${by} memindahkan "${titleOf(taskId)}" ke ${columnOf(status)}`)
+      log([`${by} memindahkan "${titleOf(taskId)[0]}" ke ${columnOf(status)}`, `${by} moved "${titleOf(taskId)[1]}" to ${columnOf(status)}`])
     })
     s.on('react', ({ kind, name }: { kind: ReactionKind; name: string }) => float(kind, name))
     s.on('disconnect', () => setStatus('offline'))
@@ -100,7 +102,7 @@ export function usePlayground() {
 
   const react = (kind: ReactionKind) => {
     socket?.volatile.emit('react', { kind })
-    float(kind, self?.name ?? 'Kamu')
+    float(kind, self?.name ?? tt('Kamu', 'You'))
   }
 
   // Total global datang per 2 detik; jangan sampai lebih kecil dari isi ruang yang terlihat.

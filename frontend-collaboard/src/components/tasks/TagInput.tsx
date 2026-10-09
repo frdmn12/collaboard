@@ -2,12 +2,14 @@ import { useState, type KeyboardEvent } from 'react'
 import { X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/hooks/useI18n'
 
 type Props = { id: string; value: string[]; onChange: (tags: string[]) => void; max?: number; invalid?: boolean }
 
 /** Input tag: Enter atau koma menambah, Backspace di kolom kosong menghapus tag terakhir. */
 export default function TagInput({ id, value, onChange, max = 10, invalid }: Props) {
   const [draft, setDraft] = useState('')
+  const { t: tr } = useI18n()
 
   const commit = () => {
     const tag = draft.trim().replace(/,$/, '').trim()
@@ -24,11 +26,11 @@ export default function TagInput({ id, value, onChange, max = 10, invalid }: Pro
       {value.map((t) => (
         <Badge key={t} size="sm" className="bg-background py-1 pr-1">
           {t}
-          <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} aria-label={`Hapus tag ${t}`} className="grid size-4 cursor-pointer place-items-center rounded-full hover:bg-secondary"><X size={12} strokeWidth={1.75} aria-hidden="true" /></button>
+          <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} aria-label={tr(`Hapus tag ${t}`, `Remove tag ${t}`)} className="grid size-4 cursor-pointer place-items-center rounded-full hover:bg-secondary"><X size={12} strokeWidth={1.75} aria-hidden="true" /></button>
         </Badge>
       ))}
       <input id={id} value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={commit} maxLength={30}
-        placeholder={value.length ? '' : 'Ketik tag, lalu Enter'} disabled={value.length >= max} aria-label="Tambah tag"
+        placeholder={value.length ? '' : tr('Ketik tag, lalu Enter', 'Type a tag, then Enter')} disabled={value.length >= max} aria-label={tr('Tambah tag', 'Add tag')}
         className="min-w-[8ch] flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground" />
     </div>
   )

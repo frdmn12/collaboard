@@ -2,6 +2,7 @@ import { statuses, type Status, type Task } from '@/data/dashboard'
 import { cn } from '@/lib/utils'
 import BoardColumn from './BoardColumn'
 import type { View } from './ViewToggle'
+import { useI18n } from '@/hooks/useI18n'
 
 type Props = {
   tasks: Task[]; view: View; adding: Status | null
@@ -9,8 +10,9 @@ type Props = {
 }
 
 export default function Board({ tasks, view, adding, onAdding, onAdd, onAdvance }: Props) {
+  const { t } = useI18n()
   return (
-    <div aria-label="Papan tugas" className={cn('grid gap-4', view === 'grid' ? 'grid-cols-2 items-stretch max-[900px]:grid-cols-1' : 'grid-cols-[repeat(auto-fit,minmax(230px,1fr))] items-start')}>
+    <div aria-label={t('Papan tugas', 'Task board')} className={cn('grid gap-4', view === 'grid' ? 'grid-cols-2 items-stretch max-[900px]:grid-cols-1' : 'grid-cols-[repeat(auto-fit,minmax(230px,1fr))] items-start')}>
       {statuses.map((s) => (
         <BoardColumn key={s.id} status={s} tasks={tasks.filter((t) => t.status === s.id)} adding={adding === s.id} onAdvance={onAdvance}
           onOpenAdd={() => onAdding(s.id)} onCloseAdd={() => onAdding(null)} onAdd={(title) => onAdd(title, s.id)} />

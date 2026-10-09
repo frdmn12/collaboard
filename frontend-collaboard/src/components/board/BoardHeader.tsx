@@ -4,13 +4,15 @@ import LiveStatus from './LiveStatus'
 import BoardSwitcher from '@/components/layout/BoardSwitcher'
 import { tintOf } from '@/data/dashboard'
 import { useWorkspace } from '@/hooks/useWorkspace'
+import { useI18n } from '@/hooks/useI18n'
 
 export default function BoardHeader() {
   const { board, members, tasks } = useWorkspace()
   const { isOnline } = useRealtime()
+  const { t } = useI18n()
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium text-muted-foreground">Proyek · {tasks.length} tugas</p>
+      <p className="text-sm font-medium text-muted-foreground">{t(`Proyek · ${tasks.length} tugas`, `Project · ${tasks.length} tasks`)}</p>
       <div className="flex flex-wrap items-center gap-4">
         <h1 className="text-[clamp(32px,4.5vw,48px)] leading-none font-semibold tracking-[-0.03em]">{board?.name}</h1>
         <div className="flex -space-x-2">{members.map((m) => (
@@ -23,7 +25,7 @@ export default function BoardHeader() {
         <BoardSwitcher />
       </div>
       {board?.description && <p className="text-lg text-muted-foreground">{board.description}</p>}
-      <p className="text-sm text-muted-foreground">Seret kartu antar kolom untuk mengubah status, atau ke atas dan bawah untuk mengatur urutan.</p>
+      <p className="text-sm text-muted-foreground">{t('Seret kartu antar kolom untuk mengubah status, atau ke atas dan bawah untuk mengatur urutan.', 'Drag cards between columns to change status, or up and down to reorder.')}</p>
     </div>
   )
 }

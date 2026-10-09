@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import NotificationPanel from './NotificationPanel'
 import { useNotifications } from '@/hooks/useNotifications'
+import { useI18n } from '@/hooks/useI18n'
 
 /** Lonceng topbar: lencana jumlah belum dibaca + panel notifikasi. */
 export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const { unreadCount, refresh } = useNotifications()
-  const label = unreadCount > 0 ? `Notifikasi, ${unreadCount} belum dibaca` : 'Notifikasi'
+  const { t } = useI18n()
+  const label = unreadCount > 0 ? t(`Notifikasi, ${unreadCount} belum dibaca`, `Notifications, ${unreadCount} unread`) : t('Notifikasi', 'Notifications')
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (o) void refresh() }}>
       <PopoverTrigger asChild>

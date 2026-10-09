@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import { errorMessage } from '@/lib/errors'
 import type { NotificationPrefs } from '@/data/notifications'
+import type { Txt } from '@/lib/i18n'
 
-export const notificationItems: { id: keyof NotificationPrefs; label: string; hint: string }[] = [
-  { id: 'assigned', label: 'Tugas ditugaskan ke saya', hint: 'Notifikasi saat seseorang menugaskan tugas kepada Anda.' },
-  { id: 'review', label: 'Permintaan review', hint: 'Notifikasi saat tugas dipindahkan ke Review.' },
-  { id: 'comment', label: 'Komentar baru', hint: 'Notifikasi saat ada komentar di tugas Anda.' },
-  { id: 'boardAdded', label: 'Ditambahkan ke proyek', hint: 'Notifikasi saat Anda ditambahkan ke sebuah proyek.' },
+export const notificationItems: { id: keyof NotificationPrefs; label: Txt; hint: Txt }[] = [
+  { id: 'assigned', label: ['Tugas ditugaskan ke saya', 'Tasks assigned to me'], hint: ['Notifikasi saat seseorang menugaskan tugas kepada Anda.', 'When someone assigns a task to you.'] },
+  { id: 'review', label: ['Permintaan review', 'Review requests'], hint: ['Notifikasi saat tugas dipindahkan ke Review.', 'When a task is moved to Review.'] },
+  { id: 'comment', label: ['Komentar baru', 'New comments'], hint: ['Notifikasi saat ada komentar di tugas Anda.', 'When someone comments on your task.'] },
+  { id: 'boardAdded', label: ['Ditambahkan ke proyek', 'Added to a project'], hint: ['Notifikasi saat Anda ditambahkan ke sebuah proyek.', 'When you’re added to a project.'] },
 ]
 
 /** Preferensi notifikasi dari server; perubahan optimistis dengan rollback bila gagal. */
