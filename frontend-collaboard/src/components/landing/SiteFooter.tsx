@@ -1,11 +1,11 @@
-import { stories } from '@/data/landing'
 import Logo from '@/components/common/Logo'
 
 const groups = [
-  ['Produk', ['Papan', 'Linimasa', 'Integrasi'], '#fitur'],
-  ['Perusahaan', ['Tentang', 'Karier', 'Blog'], '#cerita'],
-  ['Bantuan', ['Panduan', 'Kontak', 'Privasi'], '#mulai'],
+  ['Produk', ['Papan', 'Linimasa', 'Integrasi'], '/#fitur'],
+  ['Perusahaan', ['Tentang', 'Karier', 'Blog'], '/#cerita'],
+  ['Bantuan', ['Panduan', 'Kontak', 'Privasi'], '/#mulai'],
 ] as const
+// Href absolut (/#...) agar tetap mengarah ke bagian landing saat footer dipakai di laman lain.
 
 export default function SiteFooter() {
   return (
@@ -17,11 +17,6 @@ export default function SiteFooter() {
           {items.map((i) => <a key={i} href={href} className="mb-4 block font-medium">{i}</a>)}
         </div>
       ))}
-      <p className="col-span-full text-xs leading-relaxed text-muted-foreground">
-        Foto oleh {stories.filter((x) => x.photo).map((x, i) => (
-          <span key={x.name}>{i > 0 && ', '}<a href={x.href} target="_blank" rel="noreferrer" className="font-medium underline underline-offset-2">{x.credit}</a></span>
-        ))} di Unsplash.
-      </p>
       <small className="col-span-full text-xs text-muted-foreground">© 2026 Collaboard</small>
     </footer>
   )

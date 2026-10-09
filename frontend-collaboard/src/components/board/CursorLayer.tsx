@@ -1,7 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useWorkspace } from '@/hooks/useWorkspace'
-import { tintOf } from '@/data/dashboard'
+import CursorTag from '@/components/common/CursorTag'
 import { socket } from '@/lib/socket'
 
 type Cursor = { socketId: string; userId: string; name: string; x: number; y: number; at: number }
@@ -51,16 +51,9 @@ export default function CursorLayer({ containerRef }: { containerRef: RefObject<
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute top-0 left-0 z-30">
-      {[...cursors.values()].map((c) => {
-        const tint = tintOf(c.name)
-        return (
-          <div key={c.socketId} className="absolute top-0 left-0 flex items-start gap-0.5 transition-transform duration-75 ease-linear will-change-transform motion-reduce:transition-none"
-            style={{ transform: `translate(${c.x * width}px, ${c.y}px)` }}>
-            <svg viewBox="0 0 16 16" className="size-4 stroke-background stroke-[1.5]" style={{ fill: tint }}><path d="M1 1l5 14 2.2-5.8L14 7z" /></svg>
-            <span className="mt-3 rounded-full px-2 py-1 text-xs leading-none font-medium whitespace-nowrap text-[#222326] shadow-lift" style={{ background: tint }}>{c.name}</span>
-          </div>
-        )
-      })}
+      {[...cursors.values()].map((c) => (
+        <CursorTag key={c.socketId} name={c.name} x={c.x * width} y={c.y} />
+      ))}
     </div>
   )
 }

@@ -14,6 +14,7 @@ import Proyek from './pages/Proyek'
 import Tim from './pages/Tim'
 import Kalender from './pages/Kalender'
 import Pengaturan from './pages/Pengaturan'
+import Playground from './pages/Playground'
 import AppShell from './components/layout/AppShell'
 import { GuestRoute, ProtectedRoute } from './components/auth/RouteGuards'
 
@@ -23,6 +24,7 @@ export default function App() {
       <ProfileProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/playground" element={<Playground />} />
             <Route path="/verifikasi" element={<Verifikasi />} />
             <Route path="/atur-ulang-kata-sandi" element={<AturUlangKataSandi />} />
             <Route element={<GuestRoute />}>

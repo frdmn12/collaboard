@@ -19,6 +19,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { RealtimePublisherModule } from './realtime/realtime-publisher.module';
 import { UsersModule } from './users/users.module';
+import { PlaygroundModule } from './playground/playground.module';
 
 @Module({
   controllers: [AppController, HealthController],
@@ -73,6 +74,7 @@ import { UsersModule } from './users/users.module';
     NotificationsModule,
     RealtimePublisherModule,
     RealtimeModule,
+    PlaygroundModule,
   ],
 })
 export class AppModule {}

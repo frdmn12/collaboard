@@ -29,8 +29,11 @@ export class RedisIoAdapter extends IoAdapter {
     return server;
   }
 
-  async close(server: Server) {
-    await super.close(server);
+  /**
+   * Nest memanggil close() sekali per namespace (paralel), lalu dispose() sekali di akhir.
+   * Koneksi pub/sub ditutup di dispose() agar namespace lain masih bisa unsubscribe saat ditutup.
+   */
+  async dispose() {
     // quit() menunggu perintah yang sedang berjalan; kegagalan penutupan tidak perlu menggagalkan shutdown.
     await Promise.allSettled([this.pub.quit(), this.sub.quit()]);
   }

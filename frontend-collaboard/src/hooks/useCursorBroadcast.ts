@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from 'react'
-import { socket } from '@/lib/socket'
+import type { Socket } from 'socket.io-client'
+import { socket as boardSocket } from '@/lib/socket'
 
 const MIN_INTERVAL_MS = 40 // maksimal 25 pesan per detik (server membatasi 30/detik)
 
@@ -7,8 +8,9 @@ const MIN_INTERVAL_MS = 40 // maksimal 25 pesan per detik (server membatasi 30/d
  * Kirim posisi kursor ke anggota lain yang membuka papan yang sama.
  * x = pecahan lebar area (termasuk bagian yang tergulir), y = piksel dari tepi atas area; jadi tetap tepat di layar berbeda.
  * Tidak berlaku untuk layar sentuh; berhenti saat kursor keluar area atau tab disembunyikan.
+ * `socket` bisa diganti (mis. koneksi Playground); server Playground mengabaikan `boardId`.
  */
-export function useCursorBroadcast(ref: RefObject<HTMLElement | null>, boardId: string | null) {
+export function useCursorBroadcast(ref: RefObject<HTMLElement | null>, boardId: string | null, socket: Socket = boardSocket) {
   useEffect(() => {
     const el = ref.current
     if (!el || !boardId) return
@@ -40,5 +42,5 @@ export function useCursorBroadcast(ref: RefObject<HTMLElement | null>, boardId: 
       document.removeEventListener('visibilitychange', onVisibility)
       hide()
     }
-  }, [ref, boardId])
+  }, [ref, boardId, socket])
 }
