@@ -27,7 +27,7 @@ Dipakai berdampingan dengan alat tim lain (kalender, berkas, chat, kode, email, 
 Wajib memakai design system Collaboard (token, komponen, light dan dark). Nama: Collaboard.
 
 ## Evidence on Hand
-Belum ada testimoni, pelanggan, rating, atau angka nyata. Angka di landing page (4,9 dari 12.000 tim, persentase progres) dan nama tim cerita adalah contoh, jangan disajikan sebagai fakta. Foto Unsplash belum dipasang.
+Belum ada testimoni, pelanggan, rating, atau angka nyata. Angka di landing page (persentase progres) dan nama tim cerita adalah contoh, jangan disajikan sebagai fakta. Foto Unsplash belum dipasang.
 
 ## Product Principles
 - Satu papan, tanpa setup yang rumit.

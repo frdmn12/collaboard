@@ -19,7 +19,6 @@ export default function Hero() {
           <Button asChild><Link to="/daftar">{t('Buat papan pertama', 'Create your first board')}</Link></Button>
           <Button asChild variant="secondary"><Link to="/playground">{t('Coba di Playground', 'Try the Playground')}</Link></Button>
         </div>
-        <p data-m="hero-item" className="text-xs leading-none font-medium text-white"><span className="mr-1 text-sm tracking-[2px] text-pinned">★★★★★</span> {t('4,9 dari 12.000 tim', '4.9 from 12,000 teams')}</p>
         <BoardPreview />
       </div>
     </header>
