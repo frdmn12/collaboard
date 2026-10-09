@@ -70,6 +70,14 @@ Saat menambah atau memodifikasi komponen di `components/ui/`:
 - Animasi: GSAP lewat `useGSAP({ scope })`, dibungkus `gsap.matchMedia('(prefers-reduced-motion: no-preference)')`. Logika animasi dipisah ke hook di `hooks/` atau ke komponen pembungkus, bukan dicampur di laman. Konten harus terbaca penuh saat animasi dimatikan.
 - Salin (copy) dalam bahasa Indonesia, kalimat pendek, kalimat huruf kecil biasa (sentence case); tombol menyebut aksi ("Buat papan", "Undang tim").
 
+## 5a. Dua bahasa (Indonesia dan Inggris)
+
+- URL menentukan bahasa: `/playground` = Indonesia, `/en/playground` = Inggris. Semua rute adalah anak `/:lang?` di `App.tsx` (path relatif, tanpa `/` di depan).
+- **Setiap teks yang terlihat atau dibaca pembaca layar** (JSX, `aria-label`, `placeholder`, pesan galat) ditulis dua bahasa: `const { t } = useI18n()` lalu `t('Masuk', 'Sign in')`. Teks di `data/` berupa pasangan `Txt` (`['…', '…']`) dan ditampilkan dengan `tx()`. Kode non-React (`lib/`) memakai `tt()` dari `@/lib/i18n`.
+- **Navigasi** (`Link`, `NavLink`, `Navigate`, `useNavigate`) diimpor dari `@/lib/router`, bukan dari `react-router`, agar prefix `/en` ikut otomatis. `useLocation`, `useParams`, `Outlet` tetap dari `react-router`.
+- Tanggal/angka memakai `locale` dari `useI18n()` (atau `locale()` dari `@/lib/i18n`), bukan `'id-ID'` tertulis langsung. Waktu relatif lewat `Intl.RelativeTimeFormat` (lihat `lib/date.ts`).
+- Laman publik baru: daftarkan di `public/sitemap.xml` (dua URL + `hreflang`) dan panggil `useSeo({ title: t(…), path })`.
+
 ## 6. Alur membuat laman baru
 
 1. Cek `components/ui/` dan `components/common/`; pakai ulang. Belum ada? `npx shadcn@latest add <nama>`, lalu sesuaikan ke aturan bagian 4.

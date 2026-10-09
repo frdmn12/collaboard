@@ -8,12 +8,14 @@ import DemoColumn from './DemoColumn'
 import DemoCard from './DemoCard'
 import PlaygroundCursors from './PlaygroundCursors'
 import FloatingReactions from './FloatingReactions'
+import { useI18n } from '@/hooks/useI18n'
 
 type Props = { socket: Socket | null; board: Record<string, DemoStatus>; floating: Reaction[]; onMove: (taskId: string, to: DemoStatus) => void }
 
 /** Papan demo bersama satu ruang: seret kartu antar kolom, kursor dan reaksi tamu lain tampil di atasnya. */
 export default function DemoBoard({ socket, board, floating, onMove }: Props) {
   const area = useRef<HTMLDivElement>(null)
+  const { tx } = useI18n()
   useCursorBroadcast(area, socket ? 'playground' : null, socket ?? undefined)
   const statusOf = (id: string) => board[id] ?? 'doing'
   return (
@@ -28,7 +30,7 @@ export default function DemoBoard({ socket, board, floating, onMove }: Props) {
           const tasks = demoTasks.filter((t) => statusOf(t.id) === c.id)
           return (
             <DemoColumn key={c.id} column={c} count={tasks.length}>
-              {tasks.map((t) => <DemoCard key={t.id} {...t} status={c.id} onMove={(to) => onMove(t.id, to)} />)}
+              {tasks.map((t) => <DemoCard key={t.id} id={t.id} title={tx(t.title)} tag={tx(t.tag)} status={c.id} onMove={(to) => onMove(t.id, to)} />)}
             </DemoColumn>
           )
         })}

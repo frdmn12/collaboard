@@ -4,6 +4,7 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
+import { tt } from "@/lib/i18n"
 
 function Dialog({
   ...props
@@ -71,7 +72,7 @@ function DialogContent({
             className="absolute top-4 right-4 grid size-8 cursor-pointer place-items-center rounded-full bg-secondary text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
-            <span className="sr-only">Tutup</span>
+            <span className="sr-only">{tt('Tutup', 'Close')}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
@@ -109,7 +110,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="secondary">Tutup</Button>
+          <Button variant="secondary">{tt('Tutup', 'Close')}</Button>
         </DialogPrimitive.Close>
       )}
     </div>

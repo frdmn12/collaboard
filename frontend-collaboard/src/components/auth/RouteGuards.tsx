@@ -1,12 +1,17 @@
-import { Navigate, Outlet } from 'react-router'
+import { Outlet } from 'react-router'
+import { Navigate } from '@/lib/router'
 import { LoaderCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 
-const Loading = () => (
-  <div className="grid min-h-dvh place-items-center" role="status" aria-label="Memuat">
+function Loading() {
+  const { t } = useI18n()
+  return (
+  <div className="grid min-h-dvh place-items-center" role="status" aria-label={t('Memuat', 'Loading')}>
     <LoaderCircle size={28} strokeWidth={1.75} className="animate-spin text-muted-foreground" aria-hidden="true" />
   </div>
-)
+  )
+}
 
 /** Hanya untuk pengguna yang sudah masuk; selain itu diarahkan ke /masuk. */
 export function ProtectedRoute() {
